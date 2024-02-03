@@ -1,0 +1,4 @@
+# 项目排除路径
+/joule/target/
+/Materials_Horizons/target/
+/pubs_acs_org/target/

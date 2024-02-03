@@ -1,0 +1,12 @@
+:1,
+:p635-888,
+:4,
+:oa,
+:2017,
+:/cms/asset/41a5d943-8527-408d-b603-5affab12d9b4/cov200h.gif
+:/joule/issue?pii=S2542-4351(17)X0005-6,
+:OpenArchive,
+:false,
+:December20,2017,
+:20171220,
+false
