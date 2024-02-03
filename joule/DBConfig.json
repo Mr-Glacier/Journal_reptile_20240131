@@ -28,7 +28,7 @@
       "DBConnectionStr": "jdbc:mysql://sc.tudb.work:4000/",
       "DBName": "journal?useSSL=false",
       "DBUserName": "root",
-      "DBUserPass": "n22Qt4kSMZnG7FR",
+      "DBUserPass": "*****888",
       "EntityPath": "org.example.Entity.",
       "EntityList": [
         {
