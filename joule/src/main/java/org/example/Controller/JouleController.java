@@ -6,10 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import org.example.Dao.DaoFather;
-import org.example.Entity.Bean_Joule;
-import org.example.Entity.Bean_article;
-import org.example.Entity.Bean_mysql_qikan;
-import org.example.Entity.Bean_year;
+import org.example.Entity.*;
 import org.example.Until.ReadUntil;
 import org.example.Until.SaveUntil;
 import org.jsoup.Connection;
@@ -291,7 +288,6 @@ public class JouleController {
 
                     for (Element item3_1 : Items2) {
                         String type2 = item3_1.select(".toc__item__header").text();
-
                         Elements item3 = item3_1.select(".toc__item.clearfix");
                         String articleID = item3.attr("data-pii");
                         Elements item4 = item3.select(".toc__item__title");
@@ -299,6 +295,8 @@ public class JouleController {
                         System.out.println(url);
                         String title = item4.select("a").text();
                         System.out.println(title);
+
+                        String PDF = item3_1.select(".pdfLink").attr("href");
 
                         System.out.println(articleID);
 
@@ -309,6 +307,7 @@ public class JouleController {
                         bean_article.setC_year(year);
                         bean_article.setC_title(title);
                         bean_article.setC_DownTime("--");
+                        bean_article.setC_PDFUrl("https://www.cell.com"+PDF);
                         bean_article.setC_articelurl("https://www.cell.com"+url);
 
                         if (!type2.equals("")){
@@ -450,7 +449,7 @@ public class JouleController {
             bean_joule.setC_articleID(articleID);
             bean_joule.setC_article_title(article_title);
             bean_joule.setC_issue(issue.replace("ISSUE", ""));
-            bean_joule.setC_author(authorStr.replace(";;", ";"));
+            bean_joule.setC_author_JSON(authorStr.replace(";;", ";"));
             bean_joule.setC_ISSN("2542-4351");
             bean_joule.setC_关键词(keyWords);
             bean_joule.setC_摘要(summary);
@@ -464,7 +463,124 @@ public class JouleController {
 
 
     public void Method_8_Analysis_Article(String filePath,String fileName){
+        DaoFather dao_article = new DaoFather(0, 1);
+        DaoFather dao_Joule = new DaoFather(0,2);
+        ArrayList<Object> BeanList = dao_article.Method_Find();
+        for (Object bean : BeanList) {
+            Bean_article bean_article = (Bean_article) bean;
 
+            String articleID = bean_article.getC_articleID();
+            String articleUrl = bean_article.getC_articelurl();
+            String articleType = bean_article.getC_articleType();
+            String PDF = bean_article.getC_PDFUrl();
+            String content = readUntil.Method_ReadFile(filePath+articleID+fileName);
+
+            Document document = Jsoup.parse(content);
+
+            Bean_Joule bean_joule = new Bean_Joule();
+
+            bean_joule.setC_articleID(articleID);
+            bean_joule.setC_articleUrl(articleUrl);
+            bean_joule.setC_articleType(bean_article.getC_articleType());
+
+            Elements Items1 = document.select(".article-header__meta");
+            String juan = Items1.select("a").select(".article-header__vol.faded").text();
+
+            String[] parts = juan.split(",");
+            String volume = parts[0].replace(" ", "").replace("Volume", "");
+            String issue = parts[1].replace(" ", "").replace("ISSUE", "");
+            String page = Items1.select(".article-header__pages.faded").text().replace(",", "").replace(" ", "");
+            String date = Items1.select(".article-header__date.faded").text();
+            String year = date.replace(" ", "").substring(date.replace(" ", "").indexOf(",")+1,date.replace(" ", "").indexOf(",")+5);
+
+            System.out.println(volume);
+            System.out.println(issue);
+            System.out.println(year);
+            System.out.println(page);
+            System.out.println(date);
+
+
+            Elements Items2 = document.select(".article-header__middle");
+
+            String article_title = Items2.select("h1").text();
+            System.out.println(article_title);
+
+
+            Elements Item_author = Items2.select(".rlist.loa.inline-bullet-list.ellipsis-dot");
+            String author_number = Item_author.attr("data-number-of-author");
+            System.out.println(author_number);
+
+
+            Elements Items4 = Item_author.select(".loa__item.author");
+
+            JSONArray jsonArray = new JSONArray();
+            for (Element element:Items4){
+                Bean_author bean_author = new Bean_author();
+                Elements author_message = element.select(".dropBlock.article-header__info");
+
+
+                Elements Item_jie = element.select(".article-header__info__group");
+
+                String jigou = "";
+                for (Element element1 : Item_jie){
+                    String Judie = element1.select(".article-header__info__group__label").text();
+                    if (Judie.equals("Affiliations")){
+                        jigou = element1.select(".article-header__info__group__body").text();
+                    }
+                }
+
+                bean_author.setInstitution(jigou);
+                if (author_message.size()>1) {
+                    String author_name = author_message.get(0).select(".loa__item__name.article-header__info__ctrl.loa__item__email").text();
+                    String author_email = author_message.get(1).select("a").attr("href").replace("mailto:", "");
+                    bean_author.setAuthor(author_name);
+                    bean_author.setMailbox(author_email);
+                }
+                if (author_message.size()==1){
+                    String author_name = author_message.get(0).select(".loa__item__name.article-header__info__ctrl.loa__item__email").text();
+                    bean_author.setAuthor(author_name);
+                }
+//                authorStr +=JSONObject.toJSONString(bean_author)+";";
+                jsonArray.add(bean_author);
+            }
+
+            String DOI = Items2.select(".article-header__doi__value").attr("href");
+
+            Elements article_body = document.select(".article__body").select(".container");
+
+            Elements keys = article_body.select(".rlist.keywords-list.inline-bullet-list").select("li");
+            String keyWords = "";
+            for (Element element:keys){
+                String keyStr = element.select("a").text();
+                keyWords = keyWords+keyStr+";";
+            }
+
+            Elements sum_items = article_body.select(".col-md-7.col-lg-9.article__sections").select("section");
+            String summary = "";
+            for (Element element:sum_items){
+                String judge = element.select("h2").attr("data-left-hand-nav");
+
+                if (judge.equals("Summary")){
+                    summary  = element.select(".section-paragraph").text();
+                }
+            }
+
+            bean_joule.setC_articleID(articleID);
+            bean_joule.setC_articleType(articleType);
+            bean_joule.setC_articleUrl(articleUrl);
+            bean_joule.setC_article_title(article_title);
+            bean_joule.setC_issue(issue.replace("ISSUE", ""));
+            bean_joule.setC_author_JSON(jsonArray.toString());
+            bean_joule.setC_ISSN("2542-4351");
+            bean_joule.setC_关键词(keyWords);
+            bean_joule.setC_摘要(summary);
+            bean_joule.setC_DOI(DOI);
+            bean_joule.setC_year(year);
+            bean_joule.setC_volume(volume);
+            bean_joule.setC_issue(issue);
+            bean_joule.setC_PDF(PDF);
+            dao_Joule.MethodInsert(bean_joule);
+        }
     }
 
     public void Method_8_toMysql(){
@@ -484,49 +600,52 @@ public class JouleController {
             String 摘要 = bean_joule.getC_摘要();
             String 关键词 = bean_joule.getC_关键词();
             String doi = bean_joule.getC_DOI();
-            String image = "https://www.cell.com/"+bean_joule.getImg();
             String 文章号 = bean_joule.getC_articleID();
 
-            String author = bean_joule.getC_author().substring(0,bean_joule.getC_author().length()-1);
-            String[] parts = author.split(";");
-
-            String mysql_作者="";
-            String mysql_邮箱="";
-            for (int i = 0; i < parts.length; i++) {
-//                System.out.println(parts[i]);
-                if (parts[i].contains(",")){
-                    String[] parts2 = parts[i].split(",");
-                    mysql_作者 +=parts2[0]+",";
-                    mysql_邮箱 +=parts2[0]+"("+parts2[1]+");";
-                }else {
-                    mysql_作者 +=parts[i]+",";
+            String json = bean_joule.getC_author_JSON();
+            String authorStr = "";
+            String authorEmail = "";
+            JSONArray jsonArray = JSONArray.parseArray(json);
+            for (int i = 0; i < jsonArray.size(); i++) {
+                JSONObject Item = jsonArray.getJSONObject(i);
+                authorStr += Item.getString("author")+",";
+                if (!Item.getString("mailbox").equals("-")){
+                    authorEmail += Item.getString("author")+"("+Item.getString("mailbox")+")"+";";
                 }
             }
-//            System.out.println("===================");
-            Bean_mysql_qikan bean_mysql_qikan = new Bean_mysql_qikan();
-            bean_mysql_qikan.setDoi(doi);
-            bean_mysql_qikan.setIssn(issn);
-            bean_mysql_qikan.setImage(image);
-            bean_mysql_qikan.set制作人("任永康");
-            bean_mysql_qikan.set关键词(关键词);
 
+
+            Bean_mysql_qikan bean_mysql_qikan = new Bean_mysql_qikan();
             bean_mysql_qikan.set期刊名("Joule");
+            bean_mysql_qikan.set文章标题(文章标题);
+            bean_mysql_qikan.setOnlineISSN(issn);
+            bean_mysql_qikan.setPrintISSN("-");
             bean_mysql_qikan.set年(年);
             bean_mysql_qikan.set卷(卷);
             bean_mysql_qikan.set期(期);
-            bean_mysql_qikan.set摘要(摘要);
-            bean_mysql_qikan.set文章号(文章号);
-            bean_mysql_qikan.set文章标题(文章标题);
-            bean_mysql_qikan.setSource("Joule期刊信息标注.pptx");
-            bean_mysql_qikan.set官网地址("http://www.journals.elsevier.com/joule");
 
+            System.out.println(文章号);
+            bean_mysql_qikan.set作者(authorStr.substring(0,authorStr.length()-1));
+            if (authorEmail.length()>0){
+                bean_mysql_qikan.set邮箱(authorEmail.substring(0,authorEmail.length()-1));
+            }else {
+                bean_mysql_qikan.set邮箱("-");
+            }
+            bean_mysql_qikan.set摘要(摘要);
+            bean_mysql_qikan.set关键词(关键词);
+            bean_mysql_qikan.setDoi(doi);
+            bean_mysql_qikan.set文章号(文章号);
+            bean_mysql_qikan.set文章URL(bean_joule.getC_articleUrl());
+            bean_mysql_qikan.set标注参考PPT("Joule期刊信息标注.pptx");
+
+            bean_mysql_qikan.set官网地址("http://www.journals.elsevier.com/joule");
+            bean_mysql_qikan.setPdf链接(bean_joule.getC_PDF());
+            bean_mysql_qikan.set制作人("任永康");
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
             String time = df.format(new Date());
             bean_mysql_qikan.set爬取日期(time);
-            bean_mysql_qikan.set邮箱(mysql_邮箱);
-            bean_mysql_qikan.set作者(mysql_作者);
-            System.out.println(mysql_作者.substring(0,mysql_作者.length()-1));
-            System.out.println(mysql_邮箱.substring(0,mysql_邮箱.length()-1));
+            bean_mysql_qikan.set文章类型(bean_joule.getC_articleType());
+            bean_mysql_qikan.set作者_JSON(bean_joule.getC_author_JSON());
 
             dao_mysql.MethodInsert(bean_mysql_qikan);
         }

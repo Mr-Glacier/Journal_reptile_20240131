@@ -3,6 +3,16 @@ package org.example.Entity;
 public class Bean_article {
     private int C_ID;
 
+    private String C_PDFUrl;
+
+    public String getC_PDFUrl() {
+        return C_PDFUrl;
+    }
+
+    public void setC_PDFUrl(String c_PDFUrl) {
+        C_PDFUrl = c_PDFUrl;
+    }
+
     private String C_articleType;
 
     public String getC_articleType() {

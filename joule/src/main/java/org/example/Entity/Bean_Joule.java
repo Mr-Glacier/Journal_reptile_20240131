@@ -3,6 +3,10 @@ package org.example.Entity;
 public class Bean_Joule {
     private int C_ID;
 
+    private String C_PDF;
+
+    private String C_articleUrl;
+    private String C_articleType;
     private String C_articleID ;
     private String C_article_title ;
     private String C_ISSN ;
@@ -10,19 +14,33 @@ public class Bean_Joule {
     private String C_volume ;
     private String C_issue ;
     private String C_DOI ;
-    private String C_author ;
+    private String C_author_JSON;
     private String C_摘要 ;
     private String C_关键词 ;
-    private String img;
 
-    public String getImg() {
-        return img;
+    public String getC_PDF() {
+        return C_PDF;
     }
 
-    public void setImg(String img) {
-        this.img = img;
+    public void setC_PDF(String c_PDF) {
+        C_PDF = c_PDF;
     }
 
+    public String getC_articleType() {
+        return C_articleType;
+    }
+
+    public void setC_articleType(String c_articleType) {
+        C_articleType = c_articleType;
+    }
+
+    public String getC_articleUrl() {
+        return C_articleUrl;
+    }
+
+    public void setC_articleUrl(String c_articleUrl) {
+        C_articleUrl = c_articleUrl;
+    }
     public int getC_ID() {
         return C_ID;
     }
@@ -87,12 +105,12 @@ public class Bean_Joule {
         C_DOI = c_DOI;
     }
 
-    public String getC_author() {
-        return C_author;
+    public String getC_author_JSON() {
+        return C_author_JSON;
     }
 
-    public void setC_author(String c_author) {
-        C_author = c_author;
+    public void setC_author_JSON(String c_author_JSON) {
+        C_author_JSON = c_author_JSON;
     }
 
     public String getC_摘要() {

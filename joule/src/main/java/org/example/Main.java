@@ -34,9 +34,10 @@ public class Main {
 //        JC.Method_6_Down_Articles(article_detail_path,article_detail_fileName);
 
 //        解析单个文章
-        JC.Method_7_Analysis_Article(article_detail_path,article_detail_fileName);
+//        JC.Method_7_Analysis_Article(article_detail_path,article_detail_fileName);
 
-//        JC.Method_8_toMysql();
+//        JC.Method_8_Analysis_Article(article_detail_path,article_detail_fileName);
+        JC.Method_8_toMysql();
 
 //        JC.Method_9_test();
     }
